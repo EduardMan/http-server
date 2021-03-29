@@ -1,4 +1,4 @@
-package tech.itpark.http;
+package tech.itpark.http.enums;
 
 public enum HttpMethod {
     GET(false),

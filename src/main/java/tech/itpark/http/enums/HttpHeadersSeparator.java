@@ -1,4 +1,4 @@
-package tech.itpark.http;
+package tech.itpark.http.enums;
 
 public enum HttpHeadersSeparator {
     CRLF((byte)'\r', (byte)'\n');

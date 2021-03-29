@@ -1,5 +1,8 @@
 package tech.itpark.http;
 
+import tech.itpark.http.enums.HttpHeadersSeparator;
+import tech.itpark.http.enums.HttpMethod;
+import tech.itpark.http.enums.HttpVersion;
 import tech.itpark.http.exception.HttpMethodIsNotSupportedException;
 import tech.itpark.http.exception.HttpVersionIsNotSupportedException;
 import tech.itpark.http.guava.Bytes;

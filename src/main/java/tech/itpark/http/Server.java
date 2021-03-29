@@ -1,22 +1,21 @@
 package tech.itpark.http;
 
-import tech.itpark.http.exception.MalFormedRequestException;
-import tech.itpark.http.guava.Bytes;
+import tech.itpark.http.enums.HttpMethod;
+import tech.itpark.http.enums.HttpStatus;
+import tech.itpark.http.exception.MethodAlreadyRegistered;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Arrays;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.BiConsumer;
 
 public class Server {
-    public static final String GET = "GET";
-    public static final String POST = "POST";
-    public static final Set<String> allowedMethods = Set.of(GET, POST);
-    public static final Set<String> supportedHTTPVersions = Set.of("HTTP/1.1");
+    private final HashMap<String, EnumMap<HttpMethod, BiConsumer<HttpRequest, HttpResponse>>> route = new HashMap<>();
 
     public void listen(int port) {
         try (
@@ -26,7 +25,6 @@ public class Server {
                 try {
                     final var socket = serverSocket.accept();
                     handleConnection(socket);
-                    System.out.println("WTF???");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -42,132 +40,59 @@ public class Server {
                 final var in = new BufferedInputStream(socket.getInputStream());
                 final var out = new BufferedOutputStream(socket.getOutputStream());
         ) {
-            // request/headers/body
-            // client <-> bad g*s -> slow clients
-            // 1 байт в 1 секунду -> timeout 30 сек
-            // large request
-            try {
-                final var buffer = new byte[4096]; // request line - headers < 4Кб
-                in.mark(4096);
+            final HttpRequest httpRequest = new HttpRequest(in);
+            final HttpResponse httpResponse = new HttpResponse();
 
-                // Content-Length | GET -> фиговый
-                final var read = in.read(buffer);
-                final var CRLF = new byte[]{'\r', '\n'};
-
-                // mark + reset + markSupported
-
-                final var requestLineEndIndex = Bytes.indexOf(buffer, CRLF, 0, read) + CRLF.length;
-                if (requestLineEndIndex == -1) {
-                    throw new MalFormedRequestException();
-                }
-
-                final var requestLineParts = new String(buffer, 0, requestLineEndIndex)
-                        .trim()
-                        .split(" ");
-
-                if (requestLineParts.length != 3) {
-//                    throw new InvalidRequestLineException();
-                    throw new RuntimeException("requestLine");
-                }
-
-                final var method = requestLineParts[0];
-                final var uri = requestLineParts[1];
-                final var version = requestLineParts[2];
-
-                if (!allowedMethods.contains(method)) {
-                    throw new RuntimeException("invalid header: " + method);
-                }
-
-                if (!uri.startsWith("/")) {
-                    throw new RuntimeException("invalid uri: " + uri);
-                }
-
-                if (!supportedHTTPVersions.contains(version)) {
-                    throw new RuntimeException("invalid version: " + version);
-                }
-
-                if (method.equals(GET)) {
-                    // TODO: в будущем вычитать все header
-                    // TODO: вызывать обработчик
-
-                    final var body = "OK";
-                    out.write(
-                            (
-                                    "HTTP/1.1 200 OK\r\n" +
-                                            "Content-Type: text/plain\r\n" +
-                                            "Content-Length: " + body.length() + "\r\n" +
-                                            "Connection: close\r\n" +
-                                            "\r\n" +
-                                            body
-                            ).getBytes());
-                    return;
-                }
-
-                final var CRLFCRLF = new byte[]{'\r', '\n', '\r', '\n'};
-                final var headersEndIndex = Bytes.indexOf(buffer, CRLFCRLF, requestLineEndIndex, read) + CRLFCRLF.length;
-                var contentLength = 0;
-
-                // FIXME: refactor to method
-                var lastIndex = requestLineEndIndex;
-                while (true) {
-                    final var headerEndIndex = Bytes.indexOf(buffer, CRLF, lastIndex, headersEndIndex) + CRLF.length;
-                    if (headerEndIndex == -1) {
-                        throw new MalFormedRequestException();
-                    }
-                    final var headerLine = new String(buffer, lastIndex, headerEndIndex - lastIndex);
-
-                    if (headerLine.startsWith("Content-Length")) {
-                        // TODO:
-                        final var headerParts = Arrays.stream(headerLine.split(":"))
-                                .map(String::trim)
-                                .collect(Collectors.toList());
-
-                        if (headerParts.size() != 2) {
-                            throw new RuntimeException("bad Content-Length: " + headerLine);
-                        }
-
-                        contentLength = Integer.parseInt(headerParts.get(1));
-                        break;
-                    }
-
-                    lastIndex = headerEndIndex;
-                }
-                in.reset();
-
-                final var totalSize = headersEndIndex + contentLength;
-                final var fullRequestBytes = in.readNBytes(totalSize);
-
-                final var body = "Read: " + fullRequestBytes.length;
-                out.write(
-                        (
-                                "HTTP/1.1 200 OK\r\n" +
-                                        "Content-Type: text/plain\r\n" +
-                                        "Content-Length: " + body.length() + "\r\n" +
-                                        "Connection: close\r\n" +
-                                        "\r\n" +
-                                        body
-                        ).getBytes());
+            if (!route.containsKey(httpRequest.getRequestUrl())) {
+                httpResponse.setHttpStatus(HttpStatus.NOT_FOUND);
+                out.write(httpResponse.getAsBytes());
                 return;
-
-                // TODO: find handler & call it
-
-                // TODO: HttpRequest ->
-                // 1. Method -> GET/POST | getHeader
-                // 2. Uri (path/query) | getUri
-                // 3. Version | getVersion
-                // 4. Headers | get
-                // 5. Body []byte
-
-                // TODO: HttpResponse
-                // 1. StatusCode | setStatusCode
-                // 2. StatusText - OK | setStatusText
-                // 3. Headers - | setHeader()
-                // 4. Body []byte - |
-            } catch (MalFormedRequestException e) {
-                // out есть
             }
+
+            if (!route.get(httpRequest.getRequestUrl()).containsKey(httpRequest.getMethod())) {
+                httpResponse.setHttpStatus(HttpStatus.METHOD_NOT_ALLOWED);
+                out.write(httpResponse.getAsBytes());
+                return;
+            }
+
+            final BiConsumer<HttpRequest, HttpResponse> httpRequestHandler = route.get(httpRequest.getRequestUrl()).get(httpRequest.getMethod());
+            httpRequestHandler.accept(httpRequest, httpResponse);
+
+            out.write(httpResponse.getAsBytes());
+
+
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void GET(String path, BiConsumer<HttpRequest, HttpResponse> registrator) {
+        final EnumMap<HttpMethod, BiConsumer<HttpRequest, HttpResponse>> httpMethodBiConsumerEnumMap = route.get(path);
+
+        if (httpMethodBiConsumerEnumMap != null && httpMethodBiConsumerEnumMap.containsKey(HttpMethod.GET)) {
+            throw new MethodAlreadyRegistered("GET " + path + " already registered");
+        }
+
+        if (httpMethodBiConsumerEnumMap != null) {
+            route.get(path).put(HttpMethod.GET, registrator);
+            return;
+        }
+
+        route.put(path, new EnumMap<>(Map.of(HttpMethod.GET, registrator)));
+    }
+
+    public void POST(String path, BiConsumer<HttpRequest, HttpResponse> registrator) {
+        final EnumMap<HttpMethod, BiConsumer<HttpRequest, HttpResponse>> httpMethodBiConsumerEnumMap = route.get(path);
+
+        if (httpMethodBiConsumerEnumMap != null && httpMethodBiConsumerEnumMap.containsKey(HttpMethod.POST)) {
+            throw new MethodAlreadyRegistered("POST " + path + " already registered");
+        }
+
+        if (httpMethodBiConsumerEnumMap != null) {
+            route.get(path).put(HttpMethod.POST, registrator);
+            return;
+        }
+
+        route.put(path, new EnumMap<>(Map.of(HttpMethod.POST, registrator)));
     }
 }

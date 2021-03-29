@@ -1,7 +1,8 @@
 package tech.itpark.http;
 
-import java.io.Serializable;
-import java.util.Arrays;
+import tech.itpark.http.enums.HttpStatus;
+import tech.itpark.http.enums.HttpVersion;
+
 import java.util.HashMap;
 import java.util.Map;
 

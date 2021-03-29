@@ -1,9 +1,11 @@
 package tech.itpark.http;
 
+import tech.itpark.http.enums.HttpStatus;
+
 public class Main {
     public static void main(String[] args) {
 
-        final ServerImproved serverImproved = new ServerImproved();
+        final Server serverImproved = new Server();
 
         serverImproved.GET("/", (httpRequest, httpResponse) -> {
             httpResponse.setHttpStatus(HttpStatus.OK);

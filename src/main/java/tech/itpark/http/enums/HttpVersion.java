@@ -1,4 +1,4 @@
-package tech.itpark.http;
+package tech.itpark.http.enums;
 
 public enum HttpVersion {
     HTTP11("HTTP/1.1");
