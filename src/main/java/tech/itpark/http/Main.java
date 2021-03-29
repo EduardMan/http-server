@@ -5,9 +5,14 @@ public class Main {
 
         final ServerImproved serverImproved = new ServerImproved();
 
-        serverImproved.register("/", (httpRequest, httpResponse) -> {
+        serverImproved.GET("/", (httpRequest, httpResponse) -> {
             httpResponse.setHttpStatus(HttpStatus.OK);
             httpResponse.setBody("{\n   'id:' 22\n}".getBytes());
+        });
+
+        serverImproved.POST("/", (httpRequest, httpResponse) -> {
+            httpResponse.setHttpStatus(HttpStatus.OK);
+            httpResponse.setBody(httpRequest.getBody());
         });
 
         serverImproved.listen(9999);

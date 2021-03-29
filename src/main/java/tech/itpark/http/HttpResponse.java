@@ -22,6 +22,7 @@ public class HttpResponse {
     }
 
     public HttpResponse() {
+        headers.put("Content-Length", "0");
         headers.put("Content-Type", "text/plain");
         headers.put("Connection", "close");
     }
@@ -35,19 +36,28 @@ public class HttpResponse {
         headers.put("Content-Length", body == null ? "0" : String.valueOf(body.length));
     }
 
+    public byte[] getBody() {
+        return body;
+    }
+
     public byte[] getAsBytes() {
         String requestLine = httpVersion.getProtocol() + " " + httpStatus.getValue() + " " + httpStatus.getReasonPhrase() + "\r\n";
+        final String contentLength = headers.get("Content-Length");
+        final String contentLengthAsString = "0".equals(contentLength) ? "" : "Content-Length: " + contentLength + "\r\n";
 
         String httpResponse =
                 requestLine +
                         "Content-Type: " + headers.get("Content-Type") + "\r\n" +
-                        "Content-Length: " + headers.get("Content-Length") + "\r\n" +
+                        contentLengthAsString +
                         "Connection: " + headers.get("Connection") + "\r\n" +
                         "\r\n";
 
-        byte[] result = new byte[httpResponse.getBytes().length + body.length];
+        final int bodyLength = body == null ? 0 : body.length;
+        byte[] result = new byte[httpResponse.getBytes().length + bodyLength];
         System.arraycopy(httpResponse.getBytes(), 0, result, 0, httpResponse.getBytes().length);
-        System.arraycopy(body, 0, result, httpResponse.getBytes().length, body.length);
+
+        if (body != null)
+            System.arraycopy(body, 0, result, httpResponse.getBytes().length, bodyLength);
 
         return result;
     }
