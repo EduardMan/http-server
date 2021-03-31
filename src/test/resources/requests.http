@@ -1,12 +1,26 @@
 ###
 
-GET http://localhost:9999/
+GET http://localhost:9999/users
 
 ###
 
-POST http://localhost:9999/
+GET http://localhost:9999/bytes
+
+###
+
+GET http://localhost:9999/not-found-url
+
+###
+
+GET http://localhost:9999/another/not-found-url
+
+###
+
+POST http://localhost:9999/hey
 Content-Type: application/json
 
 {
-  "id": 0
+  "name": "Copycat",
+  "lastName": "Fake",
+  "age": 444
 }

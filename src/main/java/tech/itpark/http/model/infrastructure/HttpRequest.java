@@ -1,4 +1,4 @@
-package tech.itpark.http;
+package tech.itpark.http.model.infrastructure;
 
 import tech.itpark.http.enums.HttpHeadersSeparator;
 import tech.itpark.http.enums.HttpMethod;

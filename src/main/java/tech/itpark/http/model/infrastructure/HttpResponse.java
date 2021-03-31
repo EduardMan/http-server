@@ -1,4 +1,4 @@
-package tech.itpark.http;
+package tech.itpark.http.model.infrastructure;
 
 import tech.itpark.http.enums.HttpStatus;
 import tech.itpark.http.enums.HttpVersion;
@@ -23,6 +23,8 @@ public class HttpResponse {
     }
 
     public HttpResponse() {
+        httpStatus = HttpStatus.OK;
+
         headers.put("Content-Length", "0");
         headers.put("Content-Type", "text/plain");
         headers.put("Connection", "close");
