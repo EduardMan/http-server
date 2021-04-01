@@ -1,3 +1,6 @@
+POST http://localhost:9999/api/item
+Content-Type: application/json
+
 ###
 
 GET http://localhost:9999/users
@@ -18,6 +21,23 @@ GET http://localhost:9999/another/not-found-url
 
 POST http://localhost:9999/hey
 Content-Type: application/json
+
+{
+  "name": "Copycat",
+  "lastName": "Fake",
+  "age": 444
+}
+
+###
+
+GET http://localhost:9999/headers-test
+testHeader: Does it work?
+
+###
+
+POST http://localhost:9999/headers-test
+Content-Type: application/json
+testHeader: Does it work POST?
 
 {
   "name": "Copycat",

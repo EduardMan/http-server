@@ -2,16 +2,22 @@ package tech.itpark.http;
 
 import com.google.gson.Gson;
 import tech.itpark.http.annotation.RequestMapping;
+import tech.itpark.http.annotation.header.RequestBody;
+import tech.itpark.http.annotation.header.RequestHeader;
 import tech.itpark.http.enums.HttpMethod;
 import tech.itpark.http.enums.HttpStatus;
 import tech.itpark.http.exception.MethodAlreadyRegistered;
+import tech.itpark.http.model.User;
 import tech.itpark.http.model.infrastructure.HandlerMethod;
 import tech.itpark.http.model.infrastructure.HttpRequest;
 import tech.itpark.http.model.infrastructure.HttpResponse;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class FrontController {
@@ -31,7 +37,23 @@ public class FrontController {
         }
 
         final HandlerMethod handlerMethod = route.get(httpRequest.getMethod());
-        final Object methodExecutionResult = handlerMethod.getMethod().invoke(handlerMethod.getBean(), httpRequest);
+
+        List<Object> args = new ArrayList<>();
+        final Parameter[] parameters = handlerMethod.getMethod().getParameters();
+        for (Parameter parameter :
+                parameters) {
+            if (parameter.isAnnotationPresent(RequestBody.class)) {
+                args.add(handleRequestBody(parameter, httpRequest));
+            }
+            if (parameter.isAnnotationPresent(RequestHeader.class)) {
+                args.add(handleRequestHeader(parameter, httpRequest));
+            }
+            if (parameter.getType() == HttpRequest.class) {
+                args.add(httpRequest);
+            }
+        }
+
+        final Object methodExecutionResult = handlerMethod.getMethod().invoke(handlerMethod.getBean(), args.toArray());
 
         if (methodExecutionResult instanceof String) {
             httpResponse.setBody(methodExecutionResult.toString().getBytes());
@@ -44,6 +66,16 @@ public class FrontController {
         }
 
         httpResponse.setBody(gson.toJson(methodExecutionResult).getBytes());
+    }
+
+    private Object handleRequestHeader(Parameter parameter, HttpRequest httpRequest) {
+        final RequestHeader annotation = parameter.getAnnotation(RequestHeader.class);
+
+        return httpRequest.getHeaders().get(annotation.value());
+    }
+
+    private Object handleRequestBody(Parameter parameter, HttpRequest httpRequest) {
+        return gson.fromJson(new String(httpRequest.getBody()), parameter.getType());
     }
 
     public void registerRoute(Object bean, Method method, RequestMapping annotation) {
