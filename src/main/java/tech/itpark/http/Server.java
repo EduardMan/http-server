@@ -47,20 +47,6 @@ public class Server {
             final HttpRequest httpRequest = new HttpRequest(in);
             final HttpResponse httpResponse = new HttpResponse();
 
-//            if (!route.containsKey(httpRequest.getRequestUrl())) {
-//                httpResponse.setHttpStatus(HttpStatus.NOT_FOUND);
-//                out.write(httpResponse.getAsBytes());
-//                return;
-//            }
-//
-//            if (!route.get(httpRequest.getRequestUrl()).containsKey(httpRequest.getMethod())) {
-//                httpResponse.setHttpStatus(HttpStatus.METHOD_NOT_ALLOWED);
-//                out.write(httpResponse.getAsBytes());
-//                return;
-//            }
-
-
-
             if (!httpRequest.getRequestUrl().startsWith(String.valueOf(route.keySet().toArray()[0]))) {
                 httpResponse.setHttpStatus(HttpStatus.NOT_FOUND);
                 out.write(httpResponse.getAsBytes());

@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Configuration;
 import tech.itpark.http.FrontController;
 import tech.itpark.http.Server;
 import tech.itpark.http.bpp.RequestMappingBeanPostProcessor;
-import tech.itpark.http.service.UserService;
 
 @Configuration
 public class JavaConfig {
@@ -28,10 +27,5 @@ public class JavaConfig {
     @Bean
     public Server getServer() {
         return new Server();
-    }
-
-    @Bean
-    public UserService userService(Gson gson) {
-        return new UserService(gson);
     }
 }

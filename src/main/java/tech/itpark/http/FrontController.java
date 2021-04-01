@@ -7,7 +7,6 @@ import tech.itpark.http.annotation.header.RequestHeader;
 import tech.itpark.http.enums.HttpMethod;
 import tech.itpark.http.enums.HttpStatus;
 import tech.itpark.http.exception.MethodAlreadyRegistered;
-import tech.itpark.http.model.User;
 import tech.itpark.http.model.infrastructure.HandlerMethod;
 import tech.itpark.http.model.infrastructure.HttpRequest;
 import tech.itpark.http.model.infrastructure.HttpResponse;
