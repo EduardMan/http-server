@@ -1,6 +1,8 @@
 package tech.itpark.http;
 
 import com.google.gson.Gson;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Controller;
 import tech.itpark.http.annotation.RequestMapping;
 import tech.itpark.http.annotation.header.RequestBody;
 import tech.itpark.http.annotation.header.RequestHeader;
@@ -19,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Component
 public class FrontController {
     private final Map<String, Map<HttpMethod, HandlerMethod>> routes = new HashMap<>();
     private final Gson gson;

@@ -5,14 +5,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import tech.itpark.http.FrontController;
 import tech.itpark.http.Server;
-import tech.itpark.http.bpp.RequestMappingBeanPostProcessor;
 
 @Configuration
 public class JavaConfig {
-    @Bean
-    public RequestMappingBeanPostProcessor getBPP(FrontController frontController) {
-        return new RequestMappingBeanPostProcessor(frontController);
-    }
 
     @Bean
     public Gson gson() {
